@@ -1,0 +1,21 @@
+pub const NETWORK_AE: &str = r#"
+// Network
+rate "128000"
+cl_interp "0"
+cl_interp_ratio "1"
+cl_cmdrate "120"
+cl_updaterate_mp "60"
+match_updateRate "60"
+cl_updatevisibility "1"
+cl_timeout "30"
+net_compresspackets "0"
+cl_smooth "0"
+cl_smoothtime "0.01"
+cl_pred_optimize "1"
+cl_wpn_sway_interp "0"
+cl_lagcompensation "1"
+net_compresspackets_minsize "128"
+net_maxcleartime "0.020346"
+host_limitlocal "0"
+
+"#;

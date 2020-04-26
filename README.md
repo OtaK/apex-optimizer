@@ -4,11 +4,9 @@ A utility to easily apply optimized configurations for Apex Legends
 
 ## Usage
 
-`apex-optimizer --profile [aggressive|conservative|safe|default]`
+Run `apex-optimizer` with admin permissions and follow the prompts.
 
-`default` level will remove the custom videoconfig.txt file and let the game recreate a default one for you.
-
-## Building
+## Building & Contributing
 
 Requirements:
 

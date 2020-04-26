@@ -1,37 +1,69 @@
-mod fragments;
+#[macro_use]
+extern crate log;
 
-#[derive(Debug, Copy, Clone)]
-#[repr(usize)]
-enum OptimizationLevel {
-    Aggressive = 0,
-    Conservative = 1,
-    Safe = 2,
-    Default = 3
+mod apex;
+mod registry;
+mod win_elevated;
+
+use clap::{clap_app, crate_authors, crate_description, crate_version};
+
+#[cfg(not(windows))]
+fn main() -> std::io::Result<()> {
+    pretty_env_logger::init();
+    error!("This program is intended to be ran on Windows only, as Apex Legends is a Windows-only game too.");
+    Ok(())
 }
 
-impl From<usize> for OptimizationLevel {
-    fn from(v: usize) -> Self {
-        match v {
-            0 => Self::Aggressive,
-            1 => Self::Conservative,
-            2 => Self::Safe,
-            _ => Self::Default,
-        }
+#[cfg(windows)]
+fn main() -> std::io::Result<()> {
+    let matches = clap_app!(apex_optimizer =>
+        (version: crate_version!())
+        (author: crate_authors!())
+        (about: crate_description!())
+        (@arg pretend: --pretend -p "Do not do anything, just pretend and write out what will be done to your system")
+    ).get_matches();
+
+    let pretend = matches.is_present("pretend");
+    let mut log_builder = pretty_env_logger::formatted_builder();
+
+    if let Ok(s) = ::std::env::var("RUST_LOG") {
+        log_builder.parse_filters(&s);
+    } else {
+        log_builder.filter(None, log::LevelFilter::Debug);
     }
-}
 
-fn main() {
+    if pretend {
+        log_builder.filter(None, log::LevelFilter::Trace);
+    }
+
+    log_builder.init();
+
+    if pretend {
+        info!("Pretend mode enabled, no actions will be taken on your system");
+    }
+
+    if !win_elevated::is_app_elevated() {
+        error!("The app has not been launched with administrator permissions, please run it from an admin terminal");
+        return Ok(());
+    }
+
+    info!("Performing incremental config backup...");
+    apex::backup::incremental_backup()?;
+    info!("Backup completed!");
+
     let theme = dialoguer::theme::ColorfulTheme::default();
-    let mut prompt = dialoguer::Select::with_theme(&theme);
-    prompt.with_prompt("Please select a level of optimization: ");
-    prompt.items(&[
-        "Aggressive - autoexec + ugly af videoconfig",
-        "Conservative - ugly af videoconfig",
-        "Safe - safe videoconfig with a few optims here and there",
-        "Default - Deletes the custom videoconfig"
-    ]);
 
-    if let Ok(level) = prompt.interact().map(OptimizationLevel::from) {
-        println!("level selected: {:?}", level);
+    let reboot_required = registry::prompt::registry_prompt(&theme, pretend)?;
+
+    if dialoguer::Confirmation::new().with_text("Do you want to apply custom configs to Apex?").interact()? {
+        apex::prompt::apex_prompt(&theme, pretend)?;
+    } else {
+        info!("Skipping Apex configs...");
     }
+
+    if reboot_required {
+        info!("You should now reboot your computer for the fixes to take effect.");
+    }
+
+    Ok(())
 }
