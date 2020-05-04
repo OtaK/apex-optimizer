@@ -1,0 +1,42 @@
+name: Handle Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  generate:
+    name: Create release-artifacts
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install minimal stable Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+      - name: Run build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release
+      - name: Move/rename executable
+        shell: bash
+        run: |
+          mv target/release/apex-optimizer.exe apex_optimizer_windows_${{ github.event.release.tag_name }}.exe
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./apex_optimizer_windows_${{ github.event.release.tag_name }}.exe
+          asset_name: apex_optimizer_windows_${{ github.event.release.tag_name }}.exe
+          asset_content_type: application/zip
