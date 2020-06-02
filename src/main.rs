@@ -21,9 +21,11 @@ fn main() -> std::io::Result<()> {
         (author: crate_authors!())
         (about: crate_description!())
         (@arg pretend: --pretend -p "Do not do anything, just pretend and write out what will be done to your system")
+        (@arg no_backup: --no_backup -n "Don't perform config backups, but please be aware of what you're getting into")
     ).get_matches();
 
     let pretend = matches.is_present("pretend");
+    let no_backup = matches.is_present("no_backup");
     let mut log_builder = pretty_env_logger::formatted_builder();
 
     if let Ok(s) = ::std::env::var("RUST_LOG") {
@@ -47,15 +49,22 @@ fn main() -> std::io::Result<()> {
         return Ok(());
     }
 
-    info!("Performing incremental config backup...");
-    apex::backup::incremental_backup()?;
-    info!("Backup completed!");
+    if !no_backup {
+        info!("Performing incremental config backup...");
+        apex::backup::incremental_backup()?;
+        info!("Backup completed!");
+    } else {
+        info!("Skipping incremental backup...");
+    }
 
     let theme = dialoguer::theme::ColorfulTheme::default();
 
     let reboot_required = registry::prompt::registry_prompt(&theme, pretend)?;
 
-    if dialoguer::Confirmation::new().with_text("Do you want to apply custom configs to Apex?").interact()? {
+    if dialoguer::Confirmation::new()
+        .with_text("Do you want to apply custom configs to Apex?")
+        .interact()?
+    {
         apex::prompt::apex_prompt(&theme, pretend)?;
     } else {
         info!("Skipping Apex configs...");

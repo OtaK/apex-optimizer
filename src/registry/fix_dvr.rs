@@ -40,7 +40,9 @@ pub fn apply_fse_fix(pretend: bool) -> std::io::Result<()> {
         &gcstore_t,
         KEY_SET_VALUE,
     )?;
-    debug!("Writing reg key: HKEY_CURRENT_USER\\System\\GameConfigStore\\GameDVR_Enabled = dword:0");
+    debug!(
+        "Writing reg key: HKEY_CURRENT_USER\\System\\GameConfigStore\\GameDVR_Enabled = dword:0"
+    );
     gcstore.set_value("GameDVR_Enabled", &0u32)?;
     debug!("Writing reg key: HKEY_CURRENT_USER\\System\\GameConfigStore\\GameDVR_FSEBehaviorMode = dword:2");
     gcstore.set_value("GameDVR_FSEBehaviorMode", &2u32)?;

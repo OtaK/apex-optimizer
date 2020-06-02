@@ -1,5 +1,5 @@
 pub fn incremental_backup() -> std::io::Result<()> {
-    use std::io::{Write as _, Read as _};
+    use std::io::{Read as _, Write as _};
 
     debug!("Starting settings incremental backup...");
 
@@ -42,8 +42,7 @@ You can unzip this file and copy/paste this configuration to restore what you ha
             let mut file_path = apex_dir.clone();
             file_path.push(apex_cfg_file.file_name());
             debug!("Zipping {:?}...", file_path);
-            std::fs::File::open(file_path)?
-                .read_to_end(&mut buf)?;
+            std::fs::File::open(file_path)?.read_to_end(&mut buf)?;
             zip.write_all(&*buf)?;
             buf.clear();
         }

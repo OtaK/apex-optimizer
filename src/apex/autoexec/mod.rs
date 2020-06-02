@@ -29,13 +29,13 @@ impl std::fmt::Display for AutoExec {
         match self.0 {
             super::OptimizationLevel::Safe => {
                 graphics::GRAPHICS_AE.fmt(f)?;
-            },
+            }
             super::OptimizationLevel::Performance => {
                 graphics::GRAPHICS_AE.fmt(f)?;
                 graphics::GRAPHICS_MISC_AE.fmt(f)?;
                 misc::OPTIMS_AE.fmt(f)?;
                 misc::SHADOWS_AE.fmt(f)?;
-            },
+            }
             _ => {}
         }
 

@@ -11,8 +11,8 @@ pub mod backup;
 pub mod prompt;
 
 pub fn apex_user_dir() -> std::io::Result<std::path::PathBuf> {
-    let mut ret = dirs::home_dir()
-        .ok_or_else(|| std::io::Error::from(std::io::ErrorKind::NotFound))?;
+    let mut ret =
+        dirs::home_dir().ok_or_else(|| std::io::Error::from(std::io::ErrorKind::NotFound))?;
 
     ret.push("Saved Games");
     ret.push("Respawn");
