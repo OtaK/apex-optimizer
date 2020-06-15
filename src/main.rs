@@ -20,6 +20,9 @@ fn main() -> std::io::Result<()> {
 
 #[cfg(windows)]
 fn main() -> std::io::Result<()> {
+    let mut log_builder = pretty_env_logger::formatted_builder();
+    log_builder.filter(None, log::LevelFilter::Trace);
+    log_builder.init();
     ui::gui::start_gui()
 }
 

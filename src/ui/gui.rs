@@ -18,7 +18,6 @@ pub fn start_gui() -> std::io::Result<()> {
 
     let data = OptimizerOptions::default();
     AppLauncher::with_window(window)
-        .use_simple_logger()
         .launch(data)
         .expect("Launch failed!");
 
@@ -80,5 +79,9 @@ fn ui_builder() -> impl Widget<OptimizerOptions> {
     );
 
     col.add_flex_child(registry_row, 1.);
+
+    col.add_child(Button::new("Apply").on_click(|_, data, _| {
+        info!("State: {:?}", data);
+    }).padding(5.));
     col.center()
 }
