@@ -7,7 +7,7 @@ pub fn apex_prompt<T: dialoguer::theme::Theme>(theme: &T, pretend: bool) -> std:
     apex_videoconfig_prompt.items(&[
         "Performance - Game looks like trash. Might be unstable and/or reduce visibility, but FPS is maxed out.",
         "Safe - Crash-safe videoconfig with a few optims here and there",
-        &format!("ALGS - Respects ALGS ruleset (as of {}) with the most optimizations possible", env!("PKG_BUILD_DATE")),
+        crate::ALGS_STR,
         "Default - Deletes the custom videoconfig",
     ]);
 
@@ -47,7 +47,7 @@ pub fn apex_prompt<T: dialoguer::theme::Theme>(theme: &T, pretend: bool) -> std:
     apex_autoexec_prompt.items(&[
         "Performance - Good FPS gains. Might be unstable on some systems. Do not use in competitive.",
         "Safe - Crash-safe values with small FPS gains. Probably banned in competitive as well.",
-        &format!("ALGS - Respects ALGS ruleset (as of {}) with the most optimizations possible", env!("PKG_BUILD_DATE")),
+        crate::ALGS_STR,
         "Default - Deletes the custom autoexec",
     ]);
 

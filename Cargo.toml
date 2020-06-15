@@ -21,6 +21,7 @@ chrono = "0.4"
 zip = "0.5"
 reqwest = { version = "0.10", features = ["blocking"] }
 tempfile = "3.1.0"
+druid = "0.6.0"
 
 [dependencies.winapi]
 version = "0.3"
