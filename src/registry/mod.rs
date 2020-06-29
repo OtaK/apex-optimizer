@@ -10,12 +10,16 @@ pub use self::tcp_tweaks::*;
 mod gaming_tweaks;
 pub use self::gaming_tweaks::*;
 
+mod timer_tweaks;
+pub use self::timer_tweaks::*;
+
 #[derive(Debug, Copy, Clone)]
 enum WindowsFix {
     FSE = 0,
     MouseFix = 1,
     TCP = 2,
     Gaming = 3,
+    Timer = 4,
 }
 
 #[derive(Debug, Copy, Clone, Default)]
@@ -24,6 +28,7 @@ struct WindowsFixes {
     mousefix: bool,
     tcp: bool,
     gaming: bool,
+    timer: bool,
 }
 
 impl From<Vec<usize>> for WindowsFixes {
@@ -33,6 +38,7 @@ impl From<Vec<usize>> for WindowsFixes {
             mousefix: v.contains(&(WindowsFix::MouseFix as usize)),
             tcp: v.contains(&(WindowsFix::TCP as usize)),
             gaming: v.contains(&(WindowsFix::Gaming as usize)),
+            timer: v.contains(&(WindowsFix::Timer as usize)),
         }
     }
 }
@@ -51,6 +57,7 @@ pub mod prompt {
             "MouseFix - Registry tweak to tell windows to stop altering your mouse inputs. Requires 6/11 mouse speed setting in the Control Panel",
             "TCP / Nagling tweaks - Disable Nagle's algorithm and optimizes TCP handling for modern/gaming workloads",
             "Gaming Tweaks - Improves system responsiveness when using games. Might reduce input lag/latency when gaming & improve performance",
+            "Fixed Timer & HPET Off - Improves FPS & system latency a LOT. Requires a program (TimerTool) to set a fixed 0.5ms timer at boot."
         ]);
 
         if let Ok(fixes) = windows_cfg_prompt.interact().map(super::WindowsFixes::from) {
@@ -72,6 +79,10 @@ pub mod prompt {
 
             if fixes.gaming {
                 crate::registry::apply_gaming_tweaks(pretend)?;
+            }
+
+            if fixes.timer {
+                crate::registry::apply_timer_tweaks(pretend)?;
             }
         }
 
