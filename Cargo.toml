@@ -16,9 +16,11 @@ winreg = { version = "0.7", features = ["transactions"] }
 log = { version = "0.4", features = ["max_level_debug"] }
 pretty_env_logger = "0.4"
 clap = "2.33"
-dirs = "2.0"
+dirs = "3.0"
 chrono = "0.4"
 zip = "0.5"
+reqwest = { version = "0.10", features = ["blocking"] }
+tempfile = "3.1.0"
 
 [dependencies.winapi]
 version = "0.3"

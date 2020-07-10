@@ -57,7 +57,7 @@ pub mod prompt {
             "MouseFix - Registry tweak to tell windows to stop altering your mouse inputs. Requires 6/11 mouse speed setting in the Control Panel",
             "TCP / Nagling tweaks - Disable Nagle's algorithm and optimizes TCP handling for modern/gaming workloads",
             "Gaming Tweaks - Improves system responsiveness when using games. Might reduce input lag/latency when gaming & improve performance",
-            "Fixed Timer & HPET Off - Improves FPS & system latency a LOT. Requires a program (TimerTool) to set a fixed 0.5ms timer at boot."
+            "Fixed Timer & HPET Off - Improves FPS & system latency a LOT. Requires a program (TimerSet) to set a fixed 0.5ms timer at boot."
         ]);
 
         if let Ok(fixes) = windows_cfg_prompt.interact().map(super::WindowsFixes::from) {
