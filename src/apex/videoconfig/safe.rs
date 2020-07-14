@@ -44,6 +44,7 @@ impl VideoConfig {
             screen_height: 1920,
             screen_width: 1920,
             screen_refresh_rate: 60,
+            letterbox_ratio: None,
         }
     }
 }

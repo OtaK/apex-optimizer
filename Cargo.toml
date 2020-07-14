@@ -1,7 +1,7 @@
 [package]
 name = "apex-optimizer"
 description = "Program to apply fixes and configurations to help optimize Apex Legends on PC."
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Mathieu Amiot <amiot.mathieu@gmail.com>"]
 edition = "2018"
 

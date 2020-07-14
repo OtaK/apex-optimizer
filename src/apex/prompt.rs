@@ -38,7 +38,7 @@ pub fn apex_prompt<T: dialoguer::theme::Theme>(theme: &T, pretend: bool) -> std:
     };
 
     debug!(
-        "Detected main screen settings: {}x{}@{}",
+        "Detected main screen settings: {}x{}@{}Hz",
         video_config.screen_width, video_config.screen_height, video_config.screen_refresh_rate
     );
 
@@ -56,6 +56,8 @@ pub fn apex_prompt<T: dialoguer::theme::Theme>(theme: &T, pretend: bool) -> std:
     if let Ok(level) = apex_autoexec_prompt.interact().map(OptimizationLevel::from) {
         debug!("Writing new autoexec ({:?})", level);
         let mut autoexec: super::autoexec::AutoExec = level.into();
+        //autoexec.letterbox_ratio = video_config.letterbox_ratio;
+        autoexec.letterbox_ratio = Some(1.333333334);
         debug!("AutoExec: {}", autoexec);
         if !pretend {
             autoexec.write()?;

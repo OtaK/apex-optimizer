@@ -1,3 +1,5 @@
+const WIDESCREEN_RATIO: f32 = 16. / 9.;
+
 #[allow(non_snake_case)]
 #[derive(Debug, Clone, Copy)]
 pub struct VideoConfig {
@@ -42,6 +44,7 @@ pub struct VideoConfig {
     pub screen_width: u32,
     pub screen_height: u32,
     pub screen_refresh_rate: u16,
+    pub letterbox_ratio: Option<f32>,
 }
 
 mod algs;
@@ -50,7 +53,7 @@ mod performance;
 mod safe;
 
 impl VideoConfig {
-    fn get_best_video_mode() -> std::io::Result<glutin::monitor::VideoMode> {
+    pub fn get_best_video_mode() -> std::io::Result<glutin::monitor::VideoMode> {
         let ev = glutin::event_loop::EventLoop::new();
         let m = ev.primary_monitor();
         debug!(
@@ -83,6 +86,11 @@ impl VideoConfig {
         let mode = Self::get_best_video_mode()?;
 
         let glutin::dpi::PhysicalSize::<u32> { width, height } = mode.size();
+        let screen_ratio = width as f32 / height as f32;
+        if screen_ratio < WIDESCREEN_RATIO {
+            self.letterbox_ratio = Some(screen_ratio);
+        }
+
         self.screen_width = width;
         self.defaultres = width;
         self.screen_height = height;
@@ -96,6 +104,12 @@ impl VideoConfig {
         self.dvs_gpuframetime_min = self.dvs_gpuframetime_max - 1500;
 
         Ok(())
+    }
+
+    // TODO: Allow custom res to be chosen. Blocked by GUI, can't find a proper way to do so
+    #[allow(dead_code)]
+    pub fn custom_res(&mut self, _res: (u32, u32), _refresh: u16) -> std::io::Result<()> {
+        unimplemented!()
     }
 
     pub fn write(&mut self) -> std::io::Result<()> {

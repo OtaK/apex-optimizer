@@ -35,13 +35,15 @@ pub fn apply_timer_tweaks(pretend: bool) -> std::io::Result<()> {
         } else {
             drop(res);
             drop(dest);
-            let mut timerset_install = std::process::Command::new(timerset_location)
-                .arg("--install")
-                .spawn()?;
 
             info!("Waiting 5 seconds for installation to finish...");
-            std::thread::sleep(std::time::Duration::from_secs(5));
-            let _ = timerset_install.kill();
+            if !pretend {
+                let mut timerset_install = std::process::Command::new(timerset_location)
+                    .arg("--install")
+                    .spawn()?;
+                std::thread::sleep(std::time::Duration::from_secs(5));
+                let _ = timerset_install.kill();
+            }
         }
     } else {
         error!("Could not download TimerSet! No internet connection?");

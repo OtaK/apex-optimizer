@@ -6,17 +6,30 @@ pub mod network;
 pub mod privacy;
 
 #[derive(Debug, Clone, Copy)]
-pub struct AutoExec(super::OptimizationLevel);
+pub struct AutoExec {
+    level: super::OptimizationLevel,
+    pub letterbox_ratio: Option<f32>,
+}
 
 impl From<super::OptimizationLevel> for AutoExec {
-    fn from(v: super::OptimizationLevel) -> Self {
-        Self(v)
+    fn from(level: super::OptimizationLevel) -> Self {
+        Self { level, letterbox_ratio: None }
     }
 }
 
 impl std::fmt::Display for AutoExec {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        if self.0 == super::OptimizationLevel::Default {
+        if self.level == super::OptimizationLevel::Default {
+            return Ok(());
+        }
+
+        if let Some(lb_ratio) = self.letterbox_ratio {
+            writeln!(f, "// Letterbox Fixes")?;
+            writeln!(f, "mat_letterbox_aspect_goal \"{:.4}\"", lb_ratio)?;
+            writeln!(f, "mat_letterbox_aspect_threshold \"{:.4}\"", lb_ratio)?;
+        }
+
+        if self.level == super::OptimizationLevel::ALGS {
             return Ok(());
         }
 
@@ -24,9 +37,8 @@ impl std::fmt::Display for AutoExec {
         audio::AUDIO_AE.fmt(f)?;
         network::NETWORK_AE.fmt(f)?;
         privacy::PRIVACY_AE.fmt(f)?;
-        audio::AUDIO_AE.fmt(f)?;
 
-        match self.0 {
+        match self.level {
             super::OptimizationLevel::Safe => {
                 graphics::GRAPHICS_AE.fmt(f)?;
             }
