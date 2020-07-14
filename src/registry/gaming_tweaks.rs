@@ -3,7 +3,7 @@ use winreg::enums::*;
 pub fn apply_gaming_tweaks(pretend: bool) -> std::io::Result<()> {
     let hklm = winreg::RegKey::predef(HKEY_LOCAL_MACHINE);
     let sys_profile_t = winreg::transaction::Transaction::new()?;
-    let sys_profile = hklm.open_subkey_transacted_with_flags(
+    let (sys_profile, _) = hklm.create_subkey_transacted_with_flags(
         "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
         &sys_profile_t,
         KEY_WRITE,
@@ -19,7 +19,7 @@ pub fn apply_gaming_tweaks(pretend: bool) -> std::io::Result<()> {
     }
 
     let games_profile_t = winreg::transaction::Transaction::new()?;
-    let games_profile = hklm.open_subkey_transacted_with_flags(
+    let (games_profile, _) = hklm.create_subkey_transacted_with_flags(
         "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
         &games_profile_t,
         KEY_WRITE,

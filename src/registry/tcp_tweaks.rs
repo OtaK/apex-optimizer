@@ -32,7 +32,7 @@ pub fn apply_tcp_tweaks(pretend: bool) -> std::io::Result<()> {
 
     if let Some(nic_id) = nic_key {
         let nic_t = winreg::transaction::Transaction::new()?;
-        let nic = nics.open_subkey_transacted_with_flags(nic_id.clone(), &nic_t, KEY_WRITE)?;
+        let (nic, _) = nics.create_subkey_transacted_with_flags(nic_id.clone(), &nic_t, KEY_WRITE)?;
         debug!("Writing reg key: HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{}\\TcpAckFrequency = dword:1", nic_id);
         nic.set_value("TcpAckFrequency", &1u32)?;
         debug!("Writing reg key: HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{}\\TCPNoDelay = dword:1", nic_id);

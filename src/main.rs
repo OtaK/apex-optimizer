@@ -31,7 +31,7 @@ fn main() -> std::io::Result<()> {
     if let Ok(s) = ::std::env::var("RUST_LOG") {
         log_builder.parse_filters(&s);
     } else {
-        log_builder.filter(None, log::LevelFilter::Debug);
+        log_builder.filter(None, log::LevelFilter::Info);
     }
 
     if pretend {

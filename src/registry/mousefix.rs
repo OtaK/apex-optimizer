@@ -4,7 +4,7 @@ pub fn apply_mousefix(pretend: bool) -> std::io::Result<()> {
     let hkcu = winreg::RegKey::predef(HKEY_CURRENT_USER);
 
     let cu_mouse_transaction = winreg::transaction::Transaction::new()?;
-    let cu_mouse = hkcu.open_subkey_transacted_with_flags(
+    let (cu_mouse, _) = hkcu.create_subkey_transacted_with_flags(
         "Control Panel\\Mouse",
         &cu_mouse_transaction,
         KEY_SET_VALUE,
@@ -49,7 +49,7 @@ pub fn apply_mousefix(pretend: bool) -> std::io::Result<()> {
 
     let u_mouse_transaction = winreg::transaction::Transaction::new()?;
     let hku = winreg::RegKey::predef(HKEY_USERS);
-    let u_mouse = hku.open_subkey_transacted_with_flags(
+    let (u_mouse, _) = hku.create_subkey_transacted_with_flags(
         ".DEFAULT\\Control Panel\\Mouse",
         &u_mouse_transaction,
         KEY_SET_VALUE,

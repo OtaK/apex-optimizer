@@ -2,12 +2,12 @@ use winreg::enums::*;
 
 pub fn apply_fse_fix(pretend: bool) -> std::io::Result<()> {
     let hklm = winreg::RegKey::predef(HKEY_LOCAL_MACHINE);
-    let gdvr = hklm.open_subkey_with_flags(
+    let (gdvr, _) = hklm.create_subkey_with_flags(
         "SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR",
         KEY_SET_VALUE,
     )?;
 
-    debug!("Writing reg key: HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR = dword:0");
+    debug!("Writing reg key: HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR\\AllowGameDVR = dword:0");
     if !pretend {
         gdvr.set_value("AllowGameDVR", &0u32)?;
     }
@@ -15,7 +15,7 @@ pub fn apply_fse_fix(pretend: bool) -> std::io::Result<()> {
     let hkcu = winreg::RegKey::predef(HKEY_CURRENT_USER);
 
     let gbar_t = winreg::transaction::Transaction::new()?;
-    let gbar = hkcu.open_subkey_transacted_with_flags(
+    let (gbar, _) = hkcu.create_subkey_transacted_with_flags(
         "Software\\Microsoft\\GameBar",
         &gbar_t,
         KEY_SET_VALUE,
@@ -35,7 +35,7 @@ pub fn apply_fse_fix(pretend: bool) -> std::io::Result<()> {
     }
 
     let gcstore_t = winreg::transaction::Transaction::new()?;
-    let gcstore = hkcu.open_subkey_transacted_with_flags(
+    let (gcstore, _) = hkcu.create_subkey_transacted_with_flags(
         "System\\GameConfigStore",
         &gcstore_t,
         KEY_SET_VALUE,

@@ -75,14 +75,17 @@ pub mod prompt {
 
             if fixes.tcp {
                 crate::registry::apply_tcp_tweaks(pretend)?;
+                reboot_required = true;
             }
 
             if fixes.gaming {
                 crate::registry::apply_gaming_tweaks(pretend)?;
+                reboot_required = true;
             }
 
             if fixes.timer {
                 crate::registry::apply_timer_tweaks(pretend)?;
+                reboot_required = true;
             }
         }
 
