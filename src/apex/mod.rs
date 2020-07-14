@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 mod videoconfig;
 pub use self::videoconfig::*;
 

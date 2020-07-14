@@ -1,19 +1,32 @@
-use druid::widget::{Button, Checkbox, Flex, Label, Container, RadioGroup};
-use druid::{Data, Lens, LensExt, AppLauncher, LocalizedString, Widget, LensWrap, WidgetExt, Color, WindowDesc};
+use druid::{
+    Data, Lens, LensExt, AppLauncher, Widget, WidgetExt, Color, WindowDesc,
+    widget::{Button, Checkbox, Flex, Label, Container, RadioGroup, Switch, Align, ProgressBar}, UnitPoint
+};
 
-#[derive(Debug, Data, Lens, Clone, Copy, Eq, PartialEq, Default)]
+#[derive(Debug, Data, Lens, Clone, Copy, PartialEq, Default)]
 struct OptimizerOptions {
+    progress: f64,
     pretend: bool,
     no_backup: bool,
     registry_fixes: crate::registry::WindowsFixes,
+    enable_videoconfig: bool,
     apex_videoconfig_level: crate::apex::OptimizationLevel,
+    enable_autoexec: bool,
     apex_autoexec_level: crate::apex::OptimizationLevel,
+}
+
+impl OptimizerOptions {
+    fn apply(&mut self) {
+        self.progress = 0.5;
+
+        // TODO: Apply tweaks and update progress
+    }
 }
 
 pub fn start_gui() -> std::io::Result<()> {
     let window = WindowDesc::new(ui_builder)
         .title(format!("Apex Optimizer - v{}", env!("CARGO_PKG_VERSION")))
-        .window_size((800., 400.))
+        .window_size((700., 320.))
         .resizable(true);
 
     let data = OptimizerOptions::default();
@@ -24,64 +37,90 @@ pub fn start_gui() -> std::io::Result<()> {
     Ok(())
 }
 
-
 fn ui_builder() -> impl Widget<OptimizerOptions> {
-    let mut col = Flex::column();
+    let mut root = Flex::column();
 
-    let apex_row = Flex::row().with_flex_child(Flex::column()
+    let vc_radiogroup = RadioGroup::new(vec![
+        ("Performance", crate::apex::OptimizationLevel::Performance),
+        ("Safe", crate::apex::OptimizationLevel::Safe),
+        (crate::ALGS_STR_SHORT, crate::apex::OptimizationLevel::ALGS),
+        ("Default", crate::apex::OptimizationLevel::Default),
+    ]).lens(OptimizerOptions::apex_videoconfig_level);
+
+    let ae_radiogroup = RadioGroup::new(vec![
+        ("Performance", crate::apex::OptimizationLevel::Performance),
+        ("Safe", crate::apex::OptimizationLevel::Safe),
+        (crate::ALGS_STR_SHORT, crate::apex::OptimizationLevel::ALGS),
+        ("Default", crate::apex::OptimizationLevel::Default),
+    ]).lens(OptimizerOptions::apex_autoexec_level);
+
+    let apex_row = Flex::row()
         .with_flex_child(
-            Flex::row()
-                .with_child(Label::new("Apex Videoconfig"))
-                .with_child(Container::new(RadioGroup::new(vec![
-                    ("Performance - Game looks like trash. Might be unstable and/or reduce visibility, but FPS is maxed out.", crate::apex::OptimizationLevel::Performance),
-                    ("Safe - Crash-safe videoconfig with a few optims here and there", crate::apex::OptimizationLevel::Safe),
-                    (crate::ALGS_STR, crate::apex::OptimizationLevel::ALGS),
-                    ("Default - Deletes the custom videoconfig", crate::apex::OptimizationLevel::Default),
-                ]).lens(OptimizerOptions::apex_videoconfig_level)).border(Color::BLACK, 2.).rounded(10.)),
+            Flex::column()
+                .with_child(Flex::row()
+                    .with_child(Label::new("Apex Videoconfig"))
+                    .with_child(Switch::new().lens(OptimizerOptions::enable_videoconfig))
+                )
+                .with_spacer(10.)
+                .with_child(Container::new(vc_radiogroup).border(Color::BLACK, 1.).rounded(10.)),
             1.
         )
-        .with_spacer(5.)
+        .with_spacer(30.)
         .with_flex_child(
-            Flex::row()
-                .with_child(Label::new("Apex Autoexec"))
-                .with_child(Container::new(RadioGroup::new(vec![
-                    ("Performance - Good FPS gains. Might be unstable on some systems. Do not use in competitive.", crate::apex::OptimizationLevel::Performance),
-                    ("Safe - Crash-safe values with small FPS gains. Probably banned in competitive as well.", crate::apex::OptimizationLevel::Safe),
-                    (crate::ALGS_STR, crate::apex::OptimizationLevel::ALGS),
-                    ("Default - Deletes the custom autoexec", crate::apex::OptimizationLevel::Default),
-                ]).lens(OptimizerOptions::apex_autoexec_level)).border(Color::BLACK, 2.).rounded(10.)),
+            Flex::column()
+                .with_child(Flex::row()
+                    .with_child(Label::new("Apex Autoexec"))
+                    .with_child(Switch::new().lens(OptimizerOptions::enable_autoexec))
+                )
+                .with_spacer(10.)
+                .with_child(Container::new(ae_radiogroup).border(Color::BLACK, 1.).rounded(10.)),
             1.
-        ),
-        1.
-    );
-
-
-    col.add_flex_child(apex_row, 1.);
-
-    let registry_row = Flex::row().with_flex_child(Flex::column()
-        .with_child(
-            Checkbox::new("Exclusive FullScreen/GameDVR - Tells Windows to respect the Exclusive fullscreen setting. Reduces input lag.")
-            .lens(OptimizerOptions::registry_fixes.index(crate::registry::WindowsFix::FSE))
         )
-        .with_child(
-            Checkbox::new("MouseFix - Registry tweak to tell windows to stop altering your mouse inputs. Requires 6/11 mouse speed setting in the Control Panel")
-            .lens(OptimizerOptions::registry_fixes.index(crate::registry::WindowsFix::MouseFix))
-        )
-        .with_child(
-            Checkbox::new("TCP / Nagling tweaks - Disable Nagle's algorithm and optimizes TCP handling for modern/gaming workloads")
-            .lens(OptimizerOptions::registry_fixes.index(crate::registry::WindowsFix::TCP))
-        )
-        .with_child(
-            Checkbox::new("Gaming Tweaks - Improves system responsiveness when using games. Might reduce input lag/latency when gaming & improve performance")
-            .lens(OptimizerOptions::registry_fixes.index(crate::registry::WindowsFix::Gaming))
-        ),
-        1.
-    );
+        .with_spacer(30.)
+        .with_flex_child(Flex::column()
+            .with_child(Label::new("Registry tweaks"))
+            .with_spacer(10.)
+            .with_child(
+                Checkbox::new("Exclusive FullScreen/GameDVR")
+                .align_left()
+                .lens(OptimizerOptions::registry_fixes.index(crate::registry::WindowsFix::FSE))
+            )
+            .with_spacer(5.)
+            .with_child(
+                Checkbox::new("MouseFix")
+                .align_left()
+                .lens(OptimizerOptions::registry_fixes.index(crate::registry::WindowsFix::MouseFix))
+            )
+            .with_spacer(5.)
+            .with_child(
+                Checkbox::new("TCP / Nagling tweaks")
+                .align_left()
+                .lens(OptimizerOptions::registry_fixes.index(crate::registry::WindowsFix::TCP))
+            )
+            .with_spacer(5.)
+            .with_child(
+                Checkbox::new("Gaming Tweaks")
+                .align_left()
+                .lens(OptimizerOptions::registry_fixes.index(crate::registry::WindowsFix::Gaming))
+            )
+            .with_spacer(5.)
+            .with_child(
+                Checkbox::new("Fixed Timer & HPET Off")
+                .align_left()
+                .lens(OptimizerOptions::registry_fixes.index(crate::registry::WindowsFix::Timer))
+            ),
+            1.
+        );
 
-    col.add_flex_child(registry_row, 1.);
+    root.add_flex_child(apex_row.padding(20.), 1.);
 
-    col.add_child(Button::new("Apply").on_click(|_, data, _| {
-        info!("State: {:?}", data);
-    }).padding(5.));
-    col.center()
+    root.add_child(Button::new("Apply").on_click(|_, state: &mut OptimizerOptions, _| {
+        info!("State: {:?}", state);
+
+        state.apply();
+    }).padding(20.));
+
+    root.add_child(ProgressBar::new().lens(OptimizerOptions::progress));
+
+    root.center()
 }

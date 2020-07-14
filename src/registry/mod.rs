@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 mod fix_dvr;
 pub use self::fix_dvr::*;
 

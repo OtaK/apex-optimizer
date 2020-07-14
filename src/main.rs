@@ -7,9 +7,10 @@ mod win_elevated;
 
 mod ui;
 
-use clap::{clap_app, crate_authors, crate_description, crate_version};
+//use clap::{clap_app, crate_authors, crate_description, crate_version};
 
 const ALGS_STR: &'static str = concat!("ALGS - Respects ALGS ruleset (as of ", env!("PKG_BUILD_DATE"), ") with the most optimizations possible");
+const ALGS_STR_SHORT: &'static str = concat!("ALGS (", env!("PKG_BUILD_DATE"), ")");
 
 #[cfg(not(windows))]
 fn main() -> std::io::Result<()> {
