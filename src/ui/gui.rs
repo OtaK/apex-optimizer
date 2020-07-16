@@ -55,6 +55,11 @@ struct OptimizerOptions {
 impl OptimizerOptions {
     fn apply(&mut self) -> std::io::Result<()>{
         self.progress = 0.0;
+        if self.pretend {
+            self.progress = 1.;
+            return Ok(());
+        }
+
         let runas = std::ffi::CString::new("runas").unwrap().as_ptr() as winapi::shared::ntdef::LPCSTR;
         let target_exe = std::ffi::CString::new(std::env::current_exe()?.as_os_str().to_str().unwrap()).unwrap().as_ptr() as winapi::shared::ntdef::LPCSTR;
 
@@ -75,23 +80,36 @@ impl OptimizerOptions {
             return Err(std::io::ErrorKind::Other.into());
         }
 
-        self.progress = 0.5;
+        // Apply Apex tweaks
+        if self.enable_videoconfig || self.enable_autoexec {
+            self.progress = 0.5;
 
-        // Apply registry tweaks
-        let result: Hinstance = unsafe {
-            winapi::um::shellapi::ShellExecuteA(
-                winapi::um::winuser::GetActiveWindow(),
-                runas,
-                target_exe,
-                std::ffi::CString::new(format!("registry {}", self.registry_fixes.as_cli_args())).unwrap().as_ptr() as winapi::shared::ntdef::LPCSTR,
-                winapi::shared::ntdef::NULL as *const i8,
-                winapi::um::winuser::SW_HIDE,
-            ) as winapi::shared::minwindef::DWORD
-        }.into();
+            let apex_args = {
+                let mut tmp = vec![];
+                if self.enable_autoexec {
+                    tmp.push(format!("--autoexec {}", self.apex_autoexec_level));
+                }
+                if self.enable_videoconfig {
+                    tmp.push(format!("--videoconfig {}", self.apex_videoconfig_level));
+                }
+                tmp
+            };
 
-        if result.is_err() {
-            self.current_error = Some(format!("{}", result));
-            return Err(std::io::ErrorKind::Other.into());
+            let result: Hinstance = unsafe {
+                winapi::um::shellapi::ShellExecuteA(
+                    winapi::um::winuser::GetActiveWindow(),
+                    runas,
+                    target_exe,
+                    std::ffi::CString::new(format!("apex {}", apex_args.join(" "))).unwrap().as_ptr() as winapi::shared::ntdef::LPCSTR,
+                    winapi::shared::ntdef::NULL as *const i8,
+                    winapi::um::winuser::SW_HIDE,
+                ) as winapi::shared::minwindef::DWORD
+            }.into();
+
+            if result.is_err() {
+                self.current_error = Some(format!("{}", result));
+                return Err(std::io::ErrorKind::Other.into());
+            }
         }
 
         self.progress = 1.0;
@@ -190,11 +208,15 @@ fn ui_builder() -> impl Widget<OptimizerOptions> {
 
     root.add_flex_child(apex_row.padding(20.), 1.);
 
+    // TODO: Add videomode selection scrolling RadioGroup
+
     root.add_child(Button::new("Apply").fix_size(100., 30.).on_click(|_, state: &mut OptimizerOptions, _| {
         info!("State: {:?}", state);
 
         let _ = state.apply();
     }).padding(20.));
+
+    // TODO: Add button for `pretend` and `backup` options
 
     root.add_child(ProgressBar::new().expand_width().padding((30., 5.)).lens(OptimizerOptions::progress));
 

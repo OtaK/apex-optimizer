@@ -36,3 +36,14 @@ impl std::str::FromStr for OptimizationLevel {
         }
     }
 }
+
+impl std::fmt::Display for OptimizationLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Performance => write!(f, "performance"),
+            Self::Safe => write!(f, "safe"),
+            Self::ALGS => write!(f, "algs"),
+            Self::Default => write!(f, "default"),
+        }
+    }
+}
