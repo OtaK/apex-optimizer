@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 mod videoconfig;
 pub use self::videoconfig::*;
 
@@ -21,10 +23,24 @@ pub fn apex_user_dir() -> std::io::Result<std::path::PathBuf> {
     Ok(ret)
 }
 
-#[allow(dead_code)]
 pub fn apex_install_dir() -> std::io::Result<std::path::PathBuf> {
     use winreg::enums::*;
     let hklm = winreg::RegKey::predef(HKEY_LOCAL_MACHINE);
     let apex = hklm.open_subkey("SOFTWARE\\Respawn\\Apex")?;
     Ok(apex.get_value::<String, &str>("Install Dir")?.into())
+}
+
+#[inline(always)]
+pub fn generate_launch_args(video_config: &VideoConfig, wrote_autoexec: bool) -> String {
+    format!(
+        "{}-forcenovsync -fullscreen -high -freq {} -refresh {} +fps_max {}",
+        if wrote_autoexec {
+            "+exec autoexec "
+        } else {
+            ""
+        },
+        video_config.screen_refresh_rate,
+        video_config.screen_refresh_rate,
+        std::cmp::min(video_config.screen_refresh_rate - 1, 190), // NOTE: 190fps cap to avoid engine stuttering
+    )
 }

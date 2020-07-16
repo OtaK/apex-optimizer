@@ -7,19 +7,19 @@ pub mod privacy;
 
 #[derive(Debug, Clone, Copy)]
 pub struct AutoExec {
-    level: super::OptimizationLevel,
+    level: crate::apex::OptimizationLevel,
     pub letterbox_ratio: Option<f32>,
 }
 
-impl From<super::OptimizationLevel> for AutoExec {
-    fn from(level: super::OptimizationLevel) -> Self {
+impl From<crate::apex::OptimizationLevel> for AutoExec {
+    fn from(level: crate::apex::OptimizationLevel) -> Self {
         Self { level, letterbox_ratio: None }
     }
 }
 
 impl std::fmt::Display for AutoExec {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        if self.level == super::OptimizationLevel::Default {
+        if self.level == crate::apex::OptimizationLevel::Default {
             return Ok(());
         }
 
@@ -29,7 +29,7 @@ impl std::fmt::Display for AutoExec {
             writeln!(f, "mat_letterbox_aspect_threshold \"{:.4}\"", lb_ratio)?;
         }
 
-        if self.level == super::OptimizationLevel::ALGS {
+        if self.level == crate::apex::OptimizationLevel::ALGS {
             return Ok(());
         }
 

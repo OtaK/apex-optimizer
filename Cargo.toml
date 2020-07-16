@@ -1,7 +1,7 @@
 [package]
 name = "apex-optimizer"
 description = "Program to apply fixes and configurations to help optimize Apex Legends on PC."
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Mathieu Amiot <amiot.mathieu@gmail.com>"]
 edition = "2018"
 
@@ -20,11 +20,14 @@ dirs = "3.0"
 chrono = "0.4"
 zip = "0.5"
 reqwest = { version = "0.10", features = ["blocking"] }
-tempfile = "3.1.0"
+tempfile = "3.1"
+druid = "0.6"
+structopt = { version = "0.3", default-features = false, features = ["paw"] }
+paw = "1.0.0"
 
 [dependencies.winapi]
 version = "0.3"
-features = ["handleapi", "processthreadsapi", "winnt", "securitybaseapi", "impl-default"]
+features = ["handleapi", "processthreadsapi", "winnt", "securitybaseapi", "shellapi", "impl-default"]
 
 [build-dependencies]
 chrono = "0.4"

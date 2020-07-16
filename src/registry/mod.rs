@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 mod fix_dvr;
 pub use self::fix_dvr::*;
 
@@ -13,8 +15,8 @@ pub use self::gaming_tweaks::*;
 mod timer_tweaks;
 pub use self::timer_tweaks::*;
 
-#[derive(Debug, Copy, Clone)]
-enum WindowsFix {
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum WindowsFix {
     FSE = 0,
     MouseFix = 1,
     TCP = 2,
@@ -22,13 +24,25 @@ enum WindowsFix {
     Timer = 4,
 }
 
-#[derive(Debug, Copy, Clone, Default)]
-struct WindowsFixes {
-    fse: bool,
-    mousefix: bool,
-    tcp: bool,
-    gaming: bool,
-    timer: bool,
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Default, druid::Data, druid::Lens)]
+pub struct WindowsFixes {
+    pub fse: bool,
+    pub mousefix: bool,
+    pub tcp: bool,
+    pub gaming: bool,
+    pub timer: bool,
+}
+
+impl WindowsFixes {
+    pub(crate) fn as_cli_args(&self) -> String {
+        let mut ret = Vec::with_capacity(5);
+        if self.fse { ret.push("--fse"); }
+        if self.mousefix { ret.push("--mousefix"); }
+        if self.tcp { ret.push("--tcp"); }
+        if self.gaming { ret.push("--gaming"); }
+        if self.timer { ret.push("--timer"); }
+        ret.join(" ")
+    }
 }
 
 impl From<Vec<usize>> for WindowsFixes {
@@ -39,6 +53,31 @@ impl From<Vec<usize>> for WindowsFixes {
             tcp: v.contains(&(WindowsFix::TCP as usize)),
             gaming: v.contains(&(WindowsFix::Gaming as usize)),
             timer: v.contains(&(WindowsFix::Timer as usize)),
+        }
+    }
+}
+
+impl std::ops::Index<WindowsFix> for WindowsFixes {
+    type Output = bool;
+    fn index(&self, f: WindowsFix) -> &Self::Output {
+        match f {
+            WindowsFix::FSE => &self.fse,
+            WindowsFix::MouseFix => &self.mousefix,
+            WindowsFix::TCP => &self.tcp,
+            WindowsFix::Gaming => &self.gaming,
+            WindowsFix::Timer => &self.timer,
+        }
+    }
+}
+
+impl std::ops::IndexMut<WindowsFix> for WindowsFixes {
+    fn index_mut(&mut self, f: WindowsFix) -> &mut Self::Output {
+        match f {
+            WindowsFix::FSE => &mut self.fse,
+            WindowsFix::MouseFix => &mut self.mousefix,
+            WindowsFix::TCP => &mut self.tcp,
+            WindowsFix::Gaming => &mut self.gaming,
+            WindowsFix::Timer => &mut self.timer,
         }
     }
 }
