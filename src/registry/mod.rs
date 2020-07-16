@@ -33,6 +33,18 @@ pub struct WindowsFixes {
     pub timer: bool,
 }
 
+impl WindowsFixes {
+    pub(crate) fn as_cli_args(&self) -> String {
+        let mut ret = Vec::with_capacity(5);
+        if self.fse { ret.push("--fse"); }
+        if self.mousefix { ret.push("--mousefix"); }
+        if self.tcp { ret.push("--tcp"); }
+        if self.gaming { ret.push("--gaming"); }
+        if self.timer { ret.push("--timer"); }
+        ret.join(" ")
+    }
+}
+
 impl From<Vec<usize>> for WindowsFixes {
     fn from(v: Vec<usize>) -> Self {
         Self {

@@ -22,3 +22,17 @@ impl From<usize> for OptimizationLevel {
         }
     }
 }
+
+impl std::str::FromStr for OptimizationLevel {
+    type Err = std::io::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "perf" | "performance" => Ok(Self::Performance),
+            "safe" => Ok(Self::Safe),
+            "algs" => Ok(Self::ALGS),
+            "" | "default" => Ok(Self::Default),
+            _ => Err(std::io::ErrorKind::InvalidInput.into())
+        }
+    }
+}

@@ -1,11 +1,48 @@
 use druid::{
     Data, Lens, LensExt, AppLauncher, Widget, WidgetExt, Color, WindowDesc,
-    widget::{Button, Checkbox, Flex, Label, Container, RadioGroup, Switch, Align, ProgressBar}, UnitPoint
+    widget::{Button, Checkbox, Flex, Label, Container, RadioGroup, Switch, ProgressBar}
 };
 
-#[derive(Debug, Data, Lens, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+struct Hinstance(winapi::shared::minwindef::DWORD);
+
+impl Hinstance {
+    fn is_err(&self) -> bool {
+        self.0 <= 32
+    }
+}
+
+impl std::fmt::Display for Hinstance {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.0 {
+            0 => write!(f, "The operating system is out of memory or resources"),
+            winapi::shared::winerror::ERROR_BAD_FORMAT => write!(f, "The .exe file is invalid (non-Win32 .exe or error in .exe image)."),
+            winapi::um::shellapi::SE_ERR_ACCESSDENIED => write!(f, "The operating system denied access to the specified file."),
+            winapi::um::shellapi::SE_ERR_ASSOCINCOMPLETE => write!(f, "The file name association is incomplete or invalid."),
+            winapi::um::shellapi::SE_ERR_DDEBUSY => write!(f, "The DDE transaction could not be completed because other DDE transactions were being processed."),
+            winapi::um::shellapi::SE_ERR_DDEFAIL => write!(f, "The DDE transaction failed."),
+            winapi::um::shellapi::SE_ERR_DDETIMEOUT => write!(f, "The DDE transaction could not be completed because the request timed out."),
+            winapi::um::shellapi::SE_ERR_DLLNOTFOUND => write!(f, "The specified DLL was not found."),
+            winapi::um::shellapi::SE_ERR_FNF => write!(f, "The specified file was not found."),
+            winapi::um::shellapi::SE_ERR_NOASSOC => write!(f, "There is no application associated with the given file name extension. This error will also be returned if you attempt to print a file that is not printable."),
+            winapi::um::shellapi::SE_ERR_OOM => write!(f, "There was not enough memory to complete the operation."),
+            winapi::um::shellapi::SE_ERR_PNF => write!(f, "The specified path was not found."),
+            winapi::um::shellapi::SE_ERR_SHARE => write!(f, "A sharing violation occurred."),
+            _ => Ok(())
+        }
+    }
+}
+
+impl From<winapi::shared::minwindef::DWORD> for Hinstance {
+    fn from(v: winapi::shared::minwindef::DWORD) -> Self {
+        Self(v)
+    }
+}
+
+#[derive(Debug, Data, Lens, Clone, PartialEq, Default)]
 struct OptimizerOptions {
     progress: f64,
+    current_error: Option<String>,
     pretend: bool,
     no_backup: bool,
     registry_fixes: crate::registry::WindowsFixes,
@@ -16,10 +53,49 @@ struct OptimizerOptions {
 }
 
 impl OptimizerOptions {
-    fn apply(&mut self) {
+    fn apply(&mut self) -> std::io::Result<()>{
+        self.progress = 0.0;
+        let runas = std::ffi::CString::new("runas").unwrap().as_ptr() as winapi::shared::ntdef::LPCSTR;
+        let target_exe = std::ffi::CString::new(std::env::current_exe()?.as_os_str().to_str().unwrap()).unwrap().as_ptr() as winapi::shared::ntdef::LPCSTR;
+
+        // Apply registry tweaks
+        let result: Hinstance = unsafe {
+            winapi::um::shellapi::ShellExecuteA(
+                winapi::um::winuser::GetActiveWindow(),
+                runas,
+                target_exe,
+                std::ffi::CString::new(format!("registry {}", self.registry_fixes.as_cli_args())).unwrap().as_ptr() as winapi::shared::ntdef::LPCSTR,
+                winapi::shared::ntdef::NULL as *const i8,
+                winapi::um::winuser::SW_HIDE,
+            ) as winapi::shared::minwindef::DWORD
+        }.into();
+
+        if result.is_err() {
+            self.current_error = Some(format!("{}", result));
+            return Err(std::io::ErrorKind::Other.into());
+        }
+
         self.progress = 0.5;
 
-        // TODO: Apply tweaks and update progress
+        // Apply registry tweaks
+        let result: Hinstance = unsafe {
+            winapi::um::shellapi::ShellExecuteA(
+                winapi::um::winuser::GetActiveWindow(),
+                runas,
+                target_exe,
+                std::ffi::CString::new(format!("registry {}", self.registry_fixes.as_cli_args())).unwrap().as_ptr() as winapi::shared::ntdef::LPCSTR,
+                winapi::shared::ntdef::NULL as *const i8,
+                winapi::um::winuser::SW_HIDE,
+            ) as winapi::shared::minwindef::DWORD
+        }.into();
+
+        if result.is_err() {
+            self.current_error = Some(format!("{}", result));
+            return Err(std::io::ErrorKind::Other.into());
+        }
+
+        self.progress = 1.0;
+        Ok(())
     }
 }
 
@@ -27,7 +103,7 @@ pub fn start_gui() -> std::io::Result<()> {
     let window = WindowDesc::new(ui_builder)
         .title(format!("Apex Optimizer - v{}", env!("CARGO_PKG_VERSION")))
         .window_size((700., 320.))
-        .resizable(true);
+        .resizable(false);
 
     let data = OptimizerOptions::default();
     AppLauncher::with_window(window)
@@ -114,13 +190,13 @@ fn ui_builder() -> impl Widget<OptimizerOptions> {
 
     root.add_flex_child(apex_row.padding(20.), 1.);
 
-    root.add_child(Button::new("Apply").on_click(|_, state: &mut OptimizerOptions, _| {
+    root.add_child(Button::new("Apply").fix_size(100., 30.).on_click(|_, state: &mut OptimizerOptions, _| {
         info!("State: {:?}", state);
 
-        state.apply();
+        let _ = state.apply();
     }).padding(20.));
 
-    root.add_child(ProgressBar::new().lens(OptimizerOptions::progress));
+    root.add_child(ProgressBar::new().expand_width().padding((30., 5.)).lens(OptimizerOptions::progress));
 
     root.center()
 }

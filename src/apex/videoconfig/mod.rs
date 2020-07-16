@@ -1,3 +1,5 @@
+use super::OptimizationLevel;
+
 const WIDESCREEN_RATIO: f32 = 16. / 9.;
 
 #[allow(non_snake_case)]
@@ -52,6 +54,17 @@ mod default;
 mod performance;
 mod safe;
 
+impl From<OptimizationLevel> for VideoConfig {
+    fn from(level: OptimizationLevel) -> Self {
+        match level {
+            OptimizationLevel::ALGS => crate::apex::VideoConfig::defaults_algs(),
+            OptimizationLevel::Performance => crate::apex::VideoConfig::defaults_performance(),
+            OptimizationLevel::Safe => crate::apex::VideoConfig::defaults_safe(),
+            OptimizationLevel::Default => crate::apex::VideoConfig::default(),
+        }
+    }
+}
+
 impl VideoConfig {
     pub fn get_best_video_mode() -> std::io::Result<glutin::monitor::VideoMode> {
         let ev = glutin::event_loop::EventLoop::new();
@@ -86,17 +99,22 @@ impl VideoConfig {
         let mode = Self::get_best_video_mode()?;
 
         let glutin::dpi::PhysicalSize::<u32> { width, height } = mode.size();
-        let screen_ratio = width as f32 / height as f32;
+        let refresh_rate = mode.refresh_rate();
+        self.custom_res((width, height), refresh_rate)
+    }
+
+    pub fn custom_res(&mut self, res: (u32, u32), refresh: u16) -> std::io::Result<()> {
+        let screen_ratio = res.0 as f32 / res.1 as f32;
         if screen_ratio < WIDESCREEN_RATIO {
             self.letterbox_ratio = Some(screen_ratio);
         }
 
-        self.screen_width = width;
-        self.defaultres = width;
-        self.screen_height = height;
-        self.defaultresheight = height;
+        self.screen_width = res.0;
+        self.defaultres = res.0;
+        self.screen_height = res.1;
+        self.defaultresheight = res.1;
 
-        self.screen_refresh_rate = mode.refresh_rate();
+        self.screen_refresh_rate = refresh;
 
         let target_frametime = ((1. / self.screen_refresh_rate as f64) * 1_000_000.) as u32;
         debug!("Frametime: {}", target_frametime);
@@ -104,12 +122,6 @@ impl VideoConfig {
         self.dvs_gpuframetime_min = self.dvs_gpuframetime_max - 1500;
 
         Ok(())
-    }
-
-    // TODO: Allow custom res to be chosen. Blocked by GUI, can't find a proper way to do so
-    #[allow(dead_code)]
-    pub fn custom_res(&mut self, _res: (u32, u32), _refresh: u16) -> std::io::Result<()> {
-        unimplemented!()
     }
 
     pub fn write(&mut self) -> std::io::Result<()> {
