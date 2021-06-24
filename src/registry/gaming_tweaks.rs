@@ -38,5 +38,18 @@ pub fn apply_gaming_tweaks(pretend: bool) -> std::io::Result<()> {
         games_profile_t.commit()?;
     }
 
+    let priority_control_t = winreg::transaction::Transaction::new()?;
+    let (priority_control, _) = hklm.create_subkey_transacted_with_flags(
+        "SYSTEM\\CurrentControlSet\\Control\\PriorityControl",
+        &priority_control_t,
+        KEY_WRITE,
+    )?;
+
+    debug!("Writing reg key: HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\\Win32PrioritySeparation = dword:26");
+    priority_control.set_value("Win32PrioritySeparation", &26u32)?;
+    if !pretend {
+        priority_control_t.commit()?;
+    }
+
     Ok(())
 }
